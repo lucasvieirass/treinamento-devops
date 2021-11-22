@@ -1,5 +1,5 @@
 provider "aws" {
-  region = "us-east-1"
+  region = "sa-east-1"
 }
 
 data "http" "myip" {
@@ -7,11 +7,18 @@ data "http" "myip" {
 }
 
 resource "aws_instance" "jenkins" {
-  ami           = "ami-09e67e426f25ce0d7"
-  instance_type = "t2.large"
-  key_name      = "treinamento-turma1_itau"
+  associate_public_ip_address = true
+  subnet_id                   = "subnet-0fc6abd81bbb30292"
+  ami                         = "ami-0e66f5495b4efdd0f"
+  instance_type               = "t2.large"
+  key_name                    = "nova-chave"
   tags = {
     Name = "jenkins"
+  }
+  root_block_device {
+    delete_on_termination = true
+    encrypted             = true
+    volume_size           = 30
   }
   vpc_security_group_ids = ["${aws_security_group.jenkins.id}"]
 }
@@ -19,6 +26,7 @@ resource "aws_instance" "jenkins" {
 resource "aws_security_group" "jenkins" {
   name        = "acessos_jenkins"
   description = "acessos_jenkins inbound traffic"
+  vpc_id      = "vpc-060cb014cb52f7bc4"
 
   ingress = [
     {
@@ -26,7 +34,7 @@ resource "aws_security_group" "jenkins" {
       from_port        = 22
       to_port          = 22
       protocol         = "tcp"
-      cidr_blocks      = ["${chomp(data.http.myip.body)}/32"]
+      cidr_blocks      = ["0.0.0.0/0"]
       ipv6_cidr_blocks = ["::/0"]
       prefix_list_ids  = null,
       security_groups : null,
@@ -37,7 +45,7 @@ resource "aws_security_group" "jenkins" {
       from_port        = 8080
       to_port          = 8080
       protocol         = "tcp"
-      cidr_blocks      = ["${chomp(data.http.myip.body)}/32"]
+      cidr_blocks      = ["0.0.0.0/0"]
       ipv6_cidr_blocks = ["::/0"]
       prefix_list_ids  = null,
       security_groups : null,
